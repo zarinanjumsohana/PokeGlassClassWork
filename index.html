@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PokéGlass · Pokémon Card Explorer</title>
+  <meta name="description" content="Search any Pokémon by name or number and see its stats, abilities, type matchups and signature moves.">
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+
+  <!-- Decorative animated background. Screen readers skip it. -->
+  <div class="bg" aria-hidden="true">
+    <div class="bg-sky"></div>
+    <div class="bg-clouds" id="cloudLayer"></div>
+    <div class="bg-flyers" id="flyerLayer"></div>
+    <div class="bg-glow" id="cursorGlow"></div>
+  </div>
+
+  <!-- Top bar with the site name -->
+  <header class="topbar">
+    <a class="brand" href="#hero" id="brandLink" aria-label="PokeGlass home">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">PokeGlass</span>
+    </a>
+    <nav class="topbar-nav" aria-label="Main">
+  <button type="button" class="link-btn" id="browseBtn">All Pokémon</button>
+  <button type="button" class="link-btn" id="randomBtn">Surprise me</button>
+</nav>
+  </header>
+
+  <main>
+
+    <!-- =========================================================
+         PAGE 1: HERO
+         ========================================================= -->
+    <section class="hero" id="hero" aria-labelledby="heroTitle">
+      <div class="hero-inner glass">
+
+        <h1 id="heroTitle">Search any Pokémon</h1>
+        <p class="hero-note">
+          Type a name or a Pokédex number to see its artwork, stats, abilities,
+          type matchups and signature moves.
+        </p>
+
+        <!-- Search form: works with Enter key and the button -->
+        <form class="search-form" id="searchForm" novalidate>
+          <label class="visually-hidden" for="searchInput">Pokémon name or number</label>
+          <input
+            type="text"
+            id="searchInput"
+            class="field"
+            name="pokemon"
+            placeholder="Try pikachu or 25"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+            aria-describedby="statusMessage"
+          >
+          <button type="submit" class="btn-primary" id="searchBtn">Search</button>
+        </form>
+
+        <!-- Status area: loading, error and success messages appear here -->
+        <p class="status" id="statusMessage" role="status" aria-live="polite" hidden></p>
+
+        <!-- Quick search -->
+        <div class="quick" aria-labelledby="quickTitle">
+          <h2 class="quick-title" id="quickTitle">Quick search</h2>
+          <ul class="quick-list" id="quickList">
+            <li><button type="button" class="chip" data-pokemon="pikachu">Pikachu</button></li>
+            <li><button type="button" class="chip" data-pokemon="charizard">Charizard</button></li>
+            <li><button type="button" class="chip" data-pokemon="bulbasaur">Bulbasaur</button></li>
+            <li><button type="button" class="chip" data-pokemon="squirtle">Squirtle</button></li>
+            <li><button type="button" class="chip" data-pokemon="eevee">Eevee</button></li>
+            <li><button type="button" class="chip" data-pokemon="gengar">Gengar</button></li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         PAGE 2: POKÉMON DETAILS (hidden until a search succeeds)
+         ========================================================= -->
+    <section class="detail" id="detail" aria-labelledby="pokeName" hidden>
+
+      <div class="detail-toolbar">
+        <button type="button" class="link-btn" id="backBtn">Back to search</button>
+        <div class="step-nav">
+          <button type="button" class="link-btn" id="prevBtn" aria-label="Previous Pokémon">Previous</button>
+          <button type="button" class="link-btn" id="nextBtn" aria-label="Next Pokémon">Next</button>
+        </div>
+      </div>
+
+      <article class="card" id="card" data-type="normal">
+
+        <!-- ========== LEFT: information ========== -->
+        <div class="info">
+
+          <!-- Identity and description -->
+          <header class="identity">
+            <p class="poke-number" id="pokeNumber">#000</p>
+            <h2 class="poke-name" id="pokeName">Pokémon name</h2>
+            <p class="poke-category" id="pokeCategory"></p>
+            <ul class="badges" id="typeBadges" aria-label="Types"></ul>
+            <p class="poke-description" id="pokeDescription"></p>
+          </header>
+
+          <!-- Physical measurements, base experience, power rating -->
+          <section class="panel" aria-labelledby="measureTitle">
+            <h3 id="measureTitle">Measurements</h3>
+            <dl class="facts">
+              <div class="fact">
+                <dt>Height</dt>
+                <dd id="pokeHeight">0 m</dd>
+              </div>
+              <div class="fact">
+                <dt>Weight</dt>
+                <dd id="pokeWeight">0 kg</dd>
+              </div>
+              <div class="fact">
+                <dt>Base experience</dt>
+                <dd id="pokeExp">0</dd>
+              </div>
+              <div class="fact">
+                <dt>Power rating</dt>
+                <dd id="pokePower">0</dd>
+              </div>
+            </dl>
+          </section>
+
+          <!-- Abilities -->
+          <section class="panel" aria-labelledby="abilityTitle">
+            <h3 id="abilityTitle">Abilities</h3>
+            <ul class="ability-list" id="abilityList"></ul>
+          </section>
+
+          <!-- Base stats: six rows filled by JavaScript -->
+          <section class="panel" aria-labelledby="statTitle">
+            <h3 id="statTitle">Base stats</h3>
+            <ul class="stat-list" id="statList"></ul>
+            <p class="stat-total">Total <strong id="statTotal">0</strong></p>
+          </section>
+
+          <!-- Type matchups -->
+          <section class="panel" aria-labelledby="matchTitle">
+            <h3 id="matchTitle">Type matchups</h3>
+            <p class="section-note">How much damage each attack type does to this Pokémon.</p>
+            <p class="section-status" id="matchStatus" role="status" aria-live="polite"></p>
+            <div class="match-groups" id="matchGroups"></div>
+          </section>
+
+          <!-- Signature moves -->
+          <section class="panel" aria-labelledby="moveTitle">
+            <h3 id="moveTitle">Signature moves</h3>
+            <p class="section-note">Strong moves that match this Pokémon's own type. Tap one to preview it.</p>
+            <p class="section-status" id="moveStatus" role="status" aria-live="polite"></p>
+            <ul class="move-list" id="moveList"></ul>
+          </section>
+
+        </div>
+
+
+        <!-- ========== RIGHT: artwork and sound ========== -->
+        <aside class="showcase" aria-label="Pokémon artwork">
+          <p class="showcase-note" id="showcaseNote" role="status" aria-live="polite"></p>
+
+          <div class="stage" id="stage">
+            <div class="stage-glow" aria-hidden="true"></div>
+            <!-- Tap the artwork to play an attack effect -->
+            <button type="button" class="art-btn" id="artBtn" aria-label="Tap to see an attack">
+              <img
+                id="pokeImage"
+                class="art"
+                src=""
+                alt=""
+                width="475"
+                height="475"
+                decoding="async"
+              >
+            </button>
+            <canvas class="fx-canvas" id="fxCanvas" aria-hidden="true"></canvas>
+            <p class="move-bubble" id="moveBubble" role="status" aria-live="polite" hidden></p>
+          </div>
+
+          <div class="controls">
+            <!-- Normal and shiny switch -->
+            <div class="toggle" role="group" aria-label="Artwork style">
+              <button type="button" class="toggle-btn is-active" id="normalBtn" aria-pressed="true">Normal</button>
+              <button type="button" class="toggle-btn" id="shinyBtn" aria-pressed="false">Shiny</button>
+            </div>
+
+            <!-- Cries -->
+            <div class="cries">
+              <button type="button" class="btn-primary" id="cryBtn">Play cry</button>
+              <button type="button" class="btn-ghost" id="legacyCryBtn" hidden>Play retro cry</button>
+            </div>
+          </div>
+
+          <p class="showcase-note" id="showcaseNote"></p>
+
+        </aside>
+
+      </article>
+    </section>
+    <section class="browse" id="browse" aria-labelledby="browseTitle" hidden>
+
+  <div class="browse-head glass">
+    <h2 id="browseTitle">All Pokémon</h2>
+    <p class="browse-note">Every Pokémon from A to Z. Tap a card to open it.</p>
+
+    <div class="browse-tools">
+      <button type="button" class="link-btn" id="browseBackBtn">Back to search</button>
+      <label class="visually-hidden" for="browseFilter">Filter by name</label>
+      <input type="text" id="browseFilter" class="field" placeholder="Filter by name"
+             autocomplete="off" autocapitalize="none" spellcheck="false">
+    </div>
+
+    <p class="section-status" id="browseStatus" role="status" aria-live="polite"></p>
+  </div>
+
+  <ul class="dex-grid" id="dexGrid"></ul>
+
+  <div class="browse-more">
+    <button type="button" class="btn-primary" id="moreBtn" hidden>Show more</button>
+  </div>
+
+</section>
+
+  </main>
+
+  <footer class="footer">
+    <p>PokeGlass uses data from <a href="https://pokeapi.co/" target="_blank" rel="noopener">PokeAPI</a> Developed by Zarin Anjum Sohana</p>
+  </footer>
+
+</body>
+</html>
